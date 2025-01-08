@@ -1,1 +1,17 @@
-spring.application.name=shop-backend
+spring:
+  application:
+    name: shop-back
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      #ddl-auto: update
+      show-sql: true
+    defer-datasource-initialization: true # 데이터 초기화를 위한 설정.
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/shop-backend
+    username: root
+    password: 1234
+  sql:
+    init:
+      mode: always
