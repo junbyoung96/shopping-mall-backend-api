@@ -5,7 +5,6 @@ spring:
     hibernate:
       ddl-auto: create-drop
       #ddl-auto: update
-      show-sql: true
     defer-datasource-initialization: true # 데이터 초기화를 위한 설정.
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
@@ -15,3 +14,7 @@ spring:
   sql:
     init:
       mode: always
+
+payment:
+  api:
+    base-url: https://junbyoung.free.beeceptor.com

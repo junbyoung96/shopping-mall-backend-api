@@ -29,4 +29,8 @@ public class Cart {
     public Cart(User user) {
         this.user = user;
     }
+
+    public void clearCartItems(){
+        this.cartItems.clear();
+    }
 }
