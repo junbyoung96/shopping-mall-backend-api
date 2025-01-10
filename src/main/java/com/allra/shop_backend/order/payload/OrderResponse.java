@@ -1,6 +1,6 @@
 package com.allra.shop_backend.order.payload;
 
-import com.allra.shop_backend.order.OrderStatus;
+import com.allra.shop_backend.order.enums.OrderStatus;
 import com.allra.shop_backend.order.entity.Order;
 
 import java.time.LocalDateTime;

@@ -1,14 +1,15 @@
 package com.allra.shop_backend.product;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     public Page<Product> getAvailableProducts(Pageable pageable){
         return productRepository.findByStockGreaterThan(0, pageable);
