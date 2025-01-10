@@ -1,13 +1,16 @@
 package com.allra.shop_backend.order.service;
 
 import com.allra.shop_backend.cart.entity.CartItem;
+import com.allra.shop_backend.common.exception.OutOfStockException;
 import com.allra.shop_backend.order.entity.Order;
 import com.allra.shop_backend.order.entity.OrderItem;
 import com.allra.shop_backend.order.enums.OrderStatus;
 import com.allra.shop_backend.order.payload.PaymentApiResponse;
 import com.allra.shop_backend.order.repository.OrderRepository;
+import com.allra.shop_backend.product.Product;
 import com.allra.shop_backend.user.User;
 import com.allra.shop_backend.user.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -34,7 +37,11 @@ public class OrderService {
 
         Order order = new Order(user);
         for (CartItem item : user.getCart().getCartItems()) {
-            item.getProduct().updateStock(item.getQuantity());
+            Product product = item.getProduct();
+            if (product.getStock() < item.getQuantity()) {
+                throw new OutOfStockException("상품의 재고가 부족합니다.");
+            }
+            product.updateStock(product.getStock() - item.getQuantity());
             order.getOrderItems().add(new OrderItem(order, item.getProduct(), item.getQuantity()));
         }
 
@@ -49,6 +56,27 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Order cancelOrder(long orderId, long userId) {
+        Order order = getOrder(orderId);
+
+        order.updateStatus(OrderStatus.CANCELED);
+
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            product.updateStock(product.getStock() + item.getQuantity());
+        }
+
+        //환불 요청 생략//
+
+        return order;
+    }
+
+    public Order getOrder(long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order with ID " + id + " not found"));
     }
 
     public List<Order> getOrdersByUserId(long userId) {

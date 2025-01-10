@@ -12,7 +12,8 @@ public record OrderResponse(
         long totalPayment,
         OrderStatus status,
         List<OrderItemResponse> orderItems,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
     public OrderResponse(Order order) {
         this(
@@ -25,7 +26,8 @@ public record OrderResponse(
                                 item.getProduct().getPrice(),
                                 item.getQuantity()))
                         .collect(Collectors.toList()),
-                order.getCreatedAt()
+                order.getCreatedAt(),
+                order.getUpdatedAt()
         );
     }
 }

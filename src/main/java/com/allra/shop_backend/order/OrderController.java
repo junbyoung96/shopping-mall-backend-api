@@ -1,7 +1,7 @@
 package com.allra.shop_backend.order;
 
 import com.allra.shop_backend.order.entity.Order;
-import com.allra.shop_backend.order.payload.OrderCreateRequest;
+import com.allra.shop_backend.order.payload.OrderRequest;
 import com.allra.shop_backend.order.payload.OrderResponse;
 import com.allra.shop_backend.order.service.OrderService;
 import com.allra.shop_backend.user.User;
@@ -25,11 +25,12 @@ public class OrderController {
 
     /**
      * 장바구니에 담긴 모든 항목을 주문합니다.
+     *
      * @param request {@link OrderResponse}
      * @return {@link OrderResponse}
      */
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderCreateRequest request){
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request) {
         Order order = orderService.createOrder(request.userId());
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/orders/{orderId}")
                 .buildAndExpand(order.getId()).toUri();
@@ -38,12 +39,26 @@ public class OrderController {
     }
 
     /**
+     * 특정 주문을 취소합니다.
+     *
+     * @param orderId
+     * @return {@link OrderResponse}
+     */
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long orderId,
+                                                     @Valid @RequestBody OrderRequest request) {
+        Order canceledOrder = orderService.cancelOrder(orderId, request.userId());
+        return ResponseEntity.ok(new OrderResponse(canceledOrder));
+    }
+
+    /**
      * 특정 사용자의 모든 주문내역을 조회합니다.
+     *
      * @param userId
      * @return {@link OrderResponse}
      */
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAllOrders(@RequestParam long userId){
+    public ResponseEntity<List<OrderResponse>> getAllOrders(@RequestParam Long userId) {
         User user = userService.getUser(userId);
         List<Order> orders = orderService.getOrdersByUserId(user.getId());
 
