@@ -38,7 +38,7 @@ public class CartController {
      */
     @PatchMapping("/{cartItemId}")
     public ResponseEntity<CartItem> updateCartItem(@PathVariable Long cartItemId, @RequestBody CartItemUpdateRequest request) {
-        CartItem cartItem = cartService.updateCartItem(cartItemId, request.quantity());
+        CartItem cartItem = cartService.updateCartItem(request.userId(), cartItemId, request.quantity());
         return ResponseEntity.ok(cartItem);
     }
 

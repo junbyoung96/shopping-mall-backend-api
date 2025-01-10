@@ -17,7 +17,10 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "orders")
+@Table(name = "orders",
+        indexes = {
+                @Index(name = "idx_user_id", columnList = "user_id")
+        })
 @EntityListeners(AuditingEntityListener.class)
 public class Order {
     @Id

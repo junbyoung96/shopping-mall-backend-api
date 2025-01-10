@@ -1,7 +1,7 @@
 package com.allra.shop_backend.product;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,8 @@ public class ProductService {
         return productRepository.findByStockGreaterThan(0, pageable);
     }
 
-    public Page<Product> getProducts(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    public Product getProduct(long id){
+        return productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
     }
 }
