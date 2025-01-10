@@ -3,8 +3,10 @@ package com.allra.shop_backend.order.entity;
 import com.allra.shop_backend.product.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "order_items")
 public class OrderItem {

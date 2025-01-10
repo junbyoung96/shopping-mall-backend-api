@@ -1,10 +1,11 @@
 package com.allra.shop_backend.order.entity;
 
-import com.allra.shop_backend.order.OrderStatus;
+import com.allra.shop_backend.order.enums.OrderStatus;
 import com.allra.shop_backend.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "orders")
 @EntityListeners(AuditingEntityListener.class)
@@ -30,6 +32,7 @@ public class Order {
     private Long totalPayment = 0L;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -46,6 +49,7 @@ public class Order {
 
     public Order(User user){
         this.user = user;
+        this.status = OrderStatus.PROCESSING;
     }
 
     public void calculateTotalPayment(){

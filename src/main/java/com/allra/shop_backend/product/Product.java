@@ -1,5 +1,6 @@
 package com.allra.shop_backend.product;
 
+import com.allra.shop_backend.common.exception.OutOfStockException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,7 +50,10 @@ public class Product {
         this.stock = stock;
     }
 
-    public void updateStock(int updatedStock){
-        this.stock = updatedStock;
+    public void updateStock(int quantity) {
+        if (this.stock < quantity) {
+            throw new OutOfStockException("상품의 재고가 부족합니다.");
+        }
+        this.stock -= quantity;
     }
 }
