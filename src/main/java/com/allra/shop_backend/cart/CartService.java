@@ -25,13 +25,20 @@ public class CartService {
 
     private final ProductService productService;
 
+    @Transactional
     public CartItem createCartItem(CartItemCreateRequest request) {
         User user = userService.getUser(request.userId());
-
         Product product = productService.getProduct(request.productId());
 
         if (product.getStock() < request.quantity()) { //물건의 재고보다 많은 수량이 많은경우,
             throw new OutOfStockException("선택하신 수량이 상품의 재고보다 많아 선택할 수 없습니다.");
+        }
+
+        for(CartItem item : user.getCart().getCartItems()){ //기존 장바구니에 등록된 상품을 새로 추가하는경우, 기존 수량 + 새로운 수량
+            if(Objects.equals(item.getProduct().getId(), product.getId())){
+                item.updateQuantity(item.getQuantity() + request.quantity());
+                return item;
+            }
         }
 
         return cartItemRepository.save(new CartItem(user.getCart(), product, request.quantity()));
@@ -45,13 +52,7 @@ public class CartService {
         if (!Objects.equals(cartItem.getCart().getUser().getId(), user.getId())) {
             throw new UnauthorizedAccessException("리소스에 대한 권한이 없습니다.");
         }
-
-        if (cartItem.getProduct().getStock() < updatedQuantity) { //남은 재고보다 많은 수량으로 변경할시,
-            throw new OutOfStockException("선택하신 수량이 상품의 재고보다 많아 선택할 수 없습니다.");
-        }
-
         cartItem.updateQuantity(updatedQuantity);
-
         return cartItem;
     }
 

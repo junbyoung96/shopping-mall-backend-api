@@ -1,5 +1,6 @@
 package com.allra.shop_backend.cart.entity;
 
+import com.allra.shop_backend.common.exception.OutOfStockException;
 import com.allra.shop_backend.product.Product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -55,6 +56,13 @@ public class CartItem {
     }
 
     public void updateQuantity(int updatedQuantity){
+        if (updatedQuantity < 1) {
+            throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
+        }
+
+        if(this.product.getStock() < updatedQuantity){
+            throw new OutOfStockException("선택하신 수량이 상품의 재고보다 많아 선택할 수 없습니다.");
+        }
         this.quantity = updatedQuantity;
     }
 }
