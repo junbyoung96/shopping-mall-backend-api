@@ -18,3 +18,4 @@ spring:
 payment:
   api:
     base-url: https://junbyoung.free.beeceptor.com
+    endpoint: api/v1/payment

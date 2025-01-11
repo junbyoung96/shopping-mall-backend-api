@@ -34,6 +34,7 @@ public class PaymentLog {
     @Column(nullable = false)
     private PaymentStatus status;
 
+    @Column(nullable = false)
     private Long totalPayment = 0L;
 
     @CreatedDate

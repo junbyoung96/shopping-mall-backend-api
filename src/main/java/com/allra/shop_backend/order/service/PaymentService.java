@@ -7,6 +7,7 @@ import com.allra.shop_backend.order.payload.PaymentApiRequest;
 import com.allra.shop_backend.order.payload.PaymentApiResponse;
 import com.allra.shop_backend.order.repository.PaymentLogRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,6 +18,8 @@ import org.springframework.web.reactive.function.client.WebClientException;
 public class PaymentService {
     private final WebClient webClient;
     private final PaymentLogRepository paymentLogRepository;
+    @Value("${payment.api.endpoint}")
+    private String PAYMENT_ENDPOINT;
 
     public PaymentApiResponse processPayment(Order order) {
         PaymentLog paymentLog = new PaymentLog(order.getUser().getId(), order.getId(), order.getTotalPayment());
@@ -25,7 +28,7 @@ public class PaymentService {
             // 외부 결제 API 호출
             PaymentApiResponse response = webClient
                     .post()
-                    .uri("/api/v1/payment")
+                    .uri(PAYMENT_ENDPOINT)
                     .bodyValue(new PaymentApiRequest(String.valueOf(order.getId()), order.getTotalPayment()))
                     .retrieve()
                     .onStatus(

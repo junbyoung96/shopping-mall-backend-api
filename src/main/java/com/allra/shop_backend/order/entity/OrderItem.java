@@ -4,6 +4,7 @@ import com.allra.shop_backend.product.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 
 @Getter
 @NoArgsConstructor
@@ -22,6 +23,8 @@ public class OrderItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(nullable = false)
+    @Check(constraints = "quantity > 0")
     private Integer quantity;
 
     public OrderItem(Order order, Product product, Integer quantity) {

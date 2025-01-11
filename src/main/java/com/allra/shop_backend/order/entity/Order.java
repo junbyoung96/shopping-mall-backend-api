@@ -32,6 +32,7 @@ public class Order {
     @JsonIgnore
     private User user;
 
+    @Column(nullable = false)
     private Long totalPayment = 0L;
 
     @Enumerated(EnumType.STRING)
