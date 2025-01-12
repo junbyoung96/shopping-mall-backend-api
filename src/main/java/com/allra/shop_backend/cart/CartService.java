@@ -1,8 +1,10 @@
 package com.allra.shop_backend.cart;
 
+import com.allra.shop_backend.cart.entity.Cart;
 import com.allra.shop_backend.cart.entity.CartItem;
 import com.allra.shop_backend.cart.payload.CartItemCreateRequest;
 import com.allra.shop_backend.cart.repository.CartItemRepository;
+import com.allra.shop_backend.cart.repository.CartRepository;
 import com.allra.shop_backend.common.exception.OutOfStockException;
 import com.allra.shop_backend.common.exception.UnauthorizedAccessException;
 import com.allra.shop_backend.product.Product;
@@ -19,6 +21,8 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class CartService {
+    private final CartRepository cartRepository;
+
     private final CartItemRepository cartItemRepository;
 
     private final UserService userService;
@@ -69,5 +73,14 @@ public class CartService {
     public CartItem getCartItem(long id) {
         return cartItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("CartItem with ID " + id + " not found"));
+    }
+
+    public Cart getCartByUserId(long userId){
+        return cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart with UserId " + userId + " not found"));
+    }
+
+    public void clearCartItems(long cartId){
+        cartItemRepository.deleteAllByCartId(cartId);
     }
 }

@@ -1,7 +1,10 @@
 package com.allra.shop_backend.order.service;
 
+import com.allra.shop_backend.cart.CartService;
+import com.allra.shop_backend.cart.entity.Cart;
 import com.allra.shop_backend.cart.entity.CartItem;
 import com.allra.shop_backend.common.exception.OutOfStockException;
+import com.allra.shop_backend.common.exception.UnauthorizedAccessException;
 import com.allra.shop_backend.order.entity.Order;
 import com.allra.shop_backend.order.entity.OrderItem;
 import com.allra.shop_backend.order.enums.OrderStatus;
@@ -17,11 +20,14 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+
+    private final CartService cartService;
 
     private final UserService userService;
 
@@ -30,13 +36,15 @@ public class OrderService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Order createOrder(long userId) {
         User user = userService.getUser(userId);
+        //n+1 문제 해결을 위해 별도 조회
+        Cart cart = cartService.getCartByUserId(userId);
 
-        if (user.getCart() == null || user.getCart().getCartItems().isEmpty()) {
+        if (cart == null || cart.getCartItems().isEmpty()) {
             throw new RuntimeException("장바구니가 비어 있습니다.");
         }
 
         Order order = new Order(user);
-        for (CartItem item : user.getCart().getCartItems()) {
+        for (CartItem item : cart.getCartItems()) {
             Product product = item.getProduct();
             if (product.getStock() < item.getQuantity()) {
                 throw new OutOfStockException("상품의 재고가 부족합니다.");
@@ -52,7 +60,8 @@ public class OrderService {
 
         if ("SUCCESS".equals(paymentResponse.status())) {
             order.updateStatus(OrderStatus.PAID);
-            user.getCart().clearCartItems();
+            // Bulk Delete
+            cartService.clearCartItems(cart.getId());
         }
 
         return order;
@@ -61,6 +70,10 @@ public class OrderService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Order cancelOrder(long orderId, long userId) {
         Order order = getOrder(orderId);
+
+        if (!Objects.equals(order.getUser().getId(), userId)) {
+            throw new UnauthorizedAccessException("리소스에 대한 권한이 없습니다.");
+        }
 
         order.updateStatus(OrderStatus.CANCELED);
 

@@ -40,8 +40,8 @@ public class Order {
     private OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
-    
+    private final List<OrderItem> orderItems = new ArrayList<>();
+
     @CreatedDate
     @Column(nullable = false)
     @ColumnDefault("NOW()")
@@ -51,18 +51,18 @@ public class Order {
     @Column(insertable = false)
     private LocalDateTime updatedAt;
 
-    public Order(User user){
+    public Order(User user) {
         this.user = user;
         this.status = OrderStatus.PROCESSING;
     }
 
-    public void calculateTotalPayment(){
-        for(OrderItem item : this.getOrderItems()){
+    public void calculateTotalPayment() {
+        for (OrderItem item : this.getOrderItems()) {
             this.totalPayment += item.getProduct().getPrice() * item.getQuantity();
         }
     }
 
-    public void updateStatus(OrderStatus status){
+    public void updateStatus(OrderStatus status) {
         this.status = status;
     }
 }

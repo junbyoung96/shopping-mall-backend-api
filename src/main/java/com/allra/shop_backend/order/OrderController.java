@@ -42,6 +42,7 @@ public class OrderController {
      * 특정 주문을 취소합니다.
      *
      * @param orderId
+     * @param request {@link OrderRequest}
      * @return {@link OrderResponse}
      */
     @PatchMapping("/{orderId}/cancel")
