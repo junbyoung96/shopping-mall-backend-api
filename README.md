@@ -1,6 +1,34 @@
-## Allra back-end-assignment 최준병
+## Allra back-end-assignment - 최준병
 
-
+## 개발하며 신경썼던 부분들
+- **트랜잭션 처리**
+>
+주문 생성 프로세스에 트랜잭션을 적용해, 주문이 실패할 경우 주문 이력이 저장되지 않고, 변경된 상품 재고가 자동으로 롤백되도록 구현했습니다.  
+해당 트랜잭션의 고립수준을 **READ_COMMITTED**으로 설정하여 데이터 무결성과 동시성 성능을 향상시켰습니다.
+- **외부 결제 API**
+>
+외부 결제 API를 호출하기 위해 **WebClient**를 도입했습니다.  
+현재는 동기적으로 결제 요청을 처리하고 있지만, 향후 비동기 처리나 대규모 트래픽을 안정적으로 처리할 수 있도록 확장 가능성을 염두에 두고 WebClient를 선택했습니다.
+- **효율성**
+>
+엔티티마다 하위 엔티티와의 연관이 많아 **N+1 문제**가 발생하기 쉬운 구조였습니다.  
+이를 해결하기 위해 **지연 로딩**과 **@EntityGraph**를 활용해 N+1 문제를 최소화하고 효율성을 높였습니다.  
+CartItem은 Cart와, Order는 User와 강하게 결합되어 있어, 해당 엔티티에 **인덱스**를 생성해 조회 성능을 높였습니다.
+>
+**엔티티 관계도**
+| From       | To         | Relationship |
+|------------|-----------|--------------|
+| **User**   | **Cart**   | 1:1          |
+| **Cart**   | **CartItem**  | 1:N       |
+| **CartItem** | **Product**  | 1:1      |
+| **User**   | **Order**  | 1:N          |
+| **Order**  | **OrderItem** | 1:N       |
+| **OrderItem** | **Product**  | 1:1     |
+>
+## 소감
+>
+웹 프레임워크를 배우면서 자주 시도해보는 프로젝트가 게시판과 쇼핑몰이라고 들었고, 주변에서도 많이 하는 주제라 그리 어렵지 않을 거라 생각했습니다.  
+그래서 과제 주제를 듣고도 쉽게 해낼 수 있겠다고 생각했는데, 막상 구현해보니 장바구니에 물건을 담고, 삭제,수정하며, 주문을 처리하는 흐름 자체는 단순했지만, 데이터의 안정성과 효율성까지 고려해 개발하는 과정은 결코 만만치 않다는 걸 느꼈습니다.
 
 ## API 명세
 
@@ -35,7 +63,8 @@
 ### 2. Carts
 
 #### 2.1 **POST** `/api/carts`
-특정 상품을 장바구니에 추가합니다.
+특정 상품을 장바구니에 추가합니다.  
+동일한 상품이 장바구니에 존재하는 상태에서 상품을 추가하는 경우, 기존 등록된 수량에 추가되도록 구현하였습니다.
 - **Request Body**
 ```json
  {
@@ -70,7 +99,7 @@
     }
     ```
 
-#### 2.2 **PATCH** `/api/api/carts/{cartItemId}`
+#### 2.2 **PATCH** `api/carts/{cartItemId}`
 장바구니의 특정 상품의 수량을 변경합니다.
 - **Request Body**
 ```json
@@ -243,3 +272,85 @@
             "createdAt": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     }
     ```
+- **[Failed]**
+    - **Case:** 주문 번호가 유효하지 않은 경우
+    - **Http Code:** `Not Found`
+    - **Response Body**
+    ```json
+    {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order with ID {orderId} not found",
+        "instance": "/api/orders/{orderId}/cancel",
+        "timestamp": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    }
+    ```
+
+
+## 테이블 구조
+
+#### users
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 사용자 ID | Primary Key |
+| name | varchar(50) | 사용자 이름 | NOT NULL |
+| created_at | datetime | 사용자 등록시간 | NOT NULL |
+| updated_at | datetime | 사용자 변경시간 | - |
+
+#### products
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 상품 ID | Primary Key |
+| name | varchar(255) | 상품 이름 | NOT NULL |
+| description | varchar(1000) | 상품 설명 | - |
+| price | bigInt | 상품 가격 | NOT NULL, price >= 0 |
+| stock | int | 상품 재고 | NOT NULL, stock >= 0 |
+| created_at | datetime | 상품 등록시간 | NOT NULL |
+| updated_at | datetime | 상품 변경시간 | - |
+
+#### carts
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 장바구니 ID | Primary Key |
+| user_id | bigInt | 사용자 ID | Foreign Key, NOT NULL |
+
+#### cart_items
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 장바구니 항목 ID | Primary Key |
+| cart_id | bigInt | 장바구니 ID | Foreign Key, NOT NULL |
+| product_id | bigInt | 상품 ID | Foreign Key, NOT NULL |
+| quantity | int | 상품 가격 | NOT NULL, quantity >= 0 |
+| created_at | datetime | 카트 상품 등록시간 | NOT NULL |
+| updated_at | datetime | 카트 상품 변경시간 | - |
+
+#### orders
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 주문 ID | Primary Key |
+| user_id | bigInt | 사용자 ID | Foreign Key, NOT NULL |
+| total_payment | bigInt | 주문 총액 | NOT NULL |
+| status | enum('PROCESSING','PAID','SHIPPED','DELIVERED','CANCELED') | 주문 상태 | NOT NULL |
+| created_at | datetime | 주문 등록시간 | NOT NULL |
+| updated_at | datetime | 주문 변경시간 | - |
+
+#### order_items
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | 주문 상품 ID | Primary Key |
+| order_id | bigInt | 주문 ID | Foreign Key, NOT NULL |
+| product_id | bigInt | 상품 ID | Foreign Key, NOT NULL |
+| quantity | int | 주문 상품 개수 | NOT NULL, quantity > 0 |
+
+#### payment_log
+| 컬럼명 | 데이터타입 | 설명 | 제약조건 |
+|-------|-------|-------|-------|
+| id | bigInt | log ID | Primary Key |
+| user_id | bigInt | 사용자 ID | NOT NULL |
+| order_id | bigInt | 주문 ID | NOT NULL |
+| total_payment | bigInt | 주문 총액 | NOT NULL |
+| transaction_id | varchar(255) | 트랜잭션 ID | - |
+| message | varchar(255) | API 응답메시지 | - |
+| status | enum('FAILED','SUCCESS') | 결제 여부 | NOT NULL |
+| created_at | datetime | 주문 등록시간 | NOT NULL |
